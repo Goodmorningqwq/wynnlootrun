@@ -1,19 +1,23 @@
 'use client';
 
-import { Recommendation, BeaconColor, LootrunState } from '@/lib/lootrun/types';
+import { Recommendation, BeaconColor, LootrunState, MissionRecommendation, MissionName } from '@/lib/lootrun/types';
 import { BEACON_DEFINITIONS } from '@/lib/lootrun/beacons';
+import { MISSION_DEFINITIONS } from '@/lib/lootrun/missions';
 import { detectCombos, getActiveComboStrategy } from '@/lib/lootrun/combos';
 import { getBeaconConstraints } from '@/lib/lootrun/constraints';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 interface AdvisorPanelProps {
   recommendations: Recommendation[];
+  missionRecommendations: MissionRecommendation[];
   onTakeBeacon: (color: BeaconColor) => void;
+  onTakeMission: (name: MissionName, source: 'free' | 'gray') => void;
   state: LootrunState;
 }
 
-export function AdvisorPanel({ recommendations, onTakeBeacon, state }: AdvisorPanelProps) {
+export function AdvisorPanel({ recommendations, missionRecommendations, onTakeBeacon, onTakeMission, state }: AdvisorPanelProps) {
   const combos = detectCombos(state.missions);
   const activeStrategy = getActiveComboStrategy(state.missions);
   const hasActiveCombo = combos.length > 0 && combos[0] !== 'comboless';
@@ -50,7 +54,75 @@ export function AdvisorPanel({ recommendations, onTakeBeacon, state }: AdvisorPa
         </div>
       )}
 
-      {recommendations.length === 0 ? (
+      {missionRecommendations.length > 0 && (
+        <>
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-bold text-white">📋 Mission Pick</h3>
+            {(state.freeMissionAvailable || state.grayMissionChoices > 0) && (
+              <Badge className="text-[8px] px-1.5 py-0 bg-[var(--color-wynn-cyan)]/20 text-[var(--color-wynn-cyan)] border-[var(--color-wynn-cyan)]/40">
+                {state.freeMissionAvailable ? 'FREE CHOICE' : `${state.grayMissionChoices} CHOICE${state.grayMissionChoices > 1 ? 'S' : ''}`}
+              </Badge>
+            )}
+          </div>
+          <div className="space-y-2">
+            {missionRecommendations.map((rec, index) => {
+              const def = MISSION_DEFINITIONS[rec.mission];
+              if (!def) return null;
+              const priorityColor = rec.priority === 'critical' ? '#ef4444' : rec.priority === 'high' ? '#f5d442' : rec.priority === 'medium' ? '#00d2d3' : '#a39abf';
+              const source = state.freeMissionAvailable && state.missions.length === 0 ? 'free' : 'gray';
+              return (
+                <div
+                  key={rec.mission}
+                  className="rounded-lg p-3 border"
+                  style={{
+                    background: `linear-gradient(135deg, ${priorityColor}10, ${priorityColor}05)`,
+                    borderColor: `${priorityColor}40`,
+                  }}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`text-sm font-bold ${index === 0 ? 'text-[var(--color-wynn-gold)]' : 'text-gray-300'}`}>
+                      #{index + 1}
+                    </span>
+                    <span className="text-xs font-semibold text-white">{def.label}</span>
+                    <Badge
+                      className="text-[8px] px-1.5 py-0"
+                      style={{ background: `${priorityColor}20`, color: priorityColor, borderColor: `${priorityColor}40` }}
+                    >
+                      {rec.priority.toUpperCase()}
+                    </Badge>
+                    {rec.enablesCombo && (
+                      <Badge className="text-[8px] px-1.5 py-0 bg-[var(--color-wynn-gold)]/20 text-[var(--color-wynn-gold)] border-[var(--color-wynn-gold)]/40">
+                        COMBO
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-[var(--color-wynn-text-muted)] leading-relaxed mb-2">{rec.reason}</p>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-1.5 rounded-full bg-[rgba(168,85,247,0.15)]">
+                      <div
+                        className="h-full rounded-full"
+                        style={{ width: `${rec.score}%`, background: `linear-gradient(90deg, ${priorityColor}, ${priorityColor}80)` }}
+                      />
+                    </div>
+                    <span className="text-[10px] text-[var(--color-wynn-text-muted)] w-6 text-right">{rec.score}</span>
+                    <Button
+                      size="xs"
+                      onClick={() => onTakeMission(rec.mission, source)}
+                      className="text-[10px] px-2 py-0.5 h-auto border"
+                      style={{ background: `${priorityColor}20`, borderColor: `${priorityColor}60`, color: priorityColor }}
+                    >
+                      Take
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <Separator className="bg-[var(--color-wynn-border-glow)]" />
+        </>
+      )}
+
+      {recommendations.length === 0 && missionRecommendations.length === 0 ? (
         <div className="text-center py-8">
           <p className="text-[var(--color-wynn-text-muted)] text-sm">
             Select the beacons offered to you to get recommendations.

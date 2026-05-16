@@ -118,6 +118,7 @@ export interface ComboPotential {
 
 export interface MissionRecommendation {
   mission: MissionName;
+  score: number;
   reason: string;
   priority: 'critical' | 'high' | 'medium' | 'low';
   enablesCombo: ComboName | null;
@@ -204,4 +205,9 @@ export interface ScoringConfig {
   vibrantBonus: number;
   missionSynergyBonus: number;
   comboDetectionEnabled: boolean;
+}
+
+export interface MissionOffer {
+  name: MissionName;
+  isSelected: boolean;
 }

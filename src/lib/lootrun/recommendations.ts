@@ -1,8 +1,10 @@
 import {
   MissionName, TrialName, LootrunState,
   MissionRecommendation, TrialRecommendation, BoonAdvice,
+  MissionOffer,
 } from './types';
 import { COMBO_STRATEGIES, detectCombos, detectComboPotentials, getActiveComboStrategy } from './combos';
+import { MISSION_DEFINITIONS } from './missions';
 
 export function recommendMissions(
   state: LootrunState,
@@ -27,6 +29,7 @@ export function recommendMissions(
       if (remaining.includes(mission)) {
         recs.push({
           mission,
+          score: 95,
           reason: `Required for ${strategy.label} combo: ${strategy.description.split('.')[0]}.`,
           priority: 'critical',
           enablesCombo: incompletePotential.combo,
@@ -40,6 +43,7 @@ export function recommendMissions(
       if (remaining.includes(mission) && !recs.some(r => r.mission === mission)) {
         recs.push({
           mission,
+          score: 80,
           reason: `Highly recommended for ${activeStrategy.label} strategy.`,
           priority: 'high',
           enablesCombo: activeStrategy.name,
@@ -53,6 +57,7 @@ export function recommendMissions(
       if (remaining.includes(mission) && !recs.some(r => r.mission === mission)) {
         recs.push({
           mission,
+          score: 65,
           reason: `Good side pick for ${activeStrategy.label}.`,
           priority: 'medium',
           enablesCombo: activeStrategy.name,
@@ -66,6 +71,7 @@ export function recommendMissions(
     if (remaining.includes(mission) && !recs.some(r => r.mission === mission)) {
       recs.push({
         mission,
+        score: 60,
         reason: 'Strong universal pick — provides rerolls/sacrifices/survival for any strategy.',
         priority: 'medium',
         enablesCombo: null,
@@ -80,6 +86,7 @@ export function recommendMissions(
       if (remaining.includes(mission) && !recs.some(r => r.mission === mission)) {
         recs.push({
           mission,
+          score: 55,
           reason: `You have ${totalCurses} total curses — survival missions help you stay alive.`,
           priority: 'medium',
           enablesCombo: null,
@@ -92,6 +99,7 @@ export function recommendMissions(
     if (!recs.some(r => r.mission === mission)) {
       recs.push({
         mission,
+        score: 30,
         reason: 'Available but not a priority for your current strategy.',
         priority: 'low',
         enablesCombo: null,
@@ -275,4 +283,141 @@ export function recommendBoonStrategy(state: LootrunState): BoonAdvice {
   }
 
   return { shouldTakeBlue, reason, targetPotency, currentBoonCount: boonCount, recommendedCurseCount };
+}
+
+export function scoreMissions(
+  state: LootrunState,
+  offers: MissionOffer[],
+): MissionRecommendation[] {
+  const activeNames = new Set(state.missions.map(m => m.name));
+  const selectedOffers = offers.filter(o => o.isSelected && !activeNames.has(o.name));
+  if (selectedOffers.length === 0) return [];
+
+  const potentials = detectComboPotentials(state.missions);
+  const activeStrategy = getActiveComboStrategy(state.missions);
+  const detectedCombos = detectCombos(state.missions);
+  const hasActiveCombo = detectedCombos.length > 0 && detectedCombos[0] !== 'comboless';
+  const slotsLeft = 4 - state.missions.length;
+  const totalCurses = Object.values(state.curses).reduce((s, v) => s + v, 0);
+
+  const recMap = new Map<MissionName, MissionRecommendation>();
+
+  for (const offer of selectedOffers) {
+    const def = MISSION_DEFINITIONS[offer.name];
+    if (!def) continue;
+    let score = 50;
+    let reason = def.description;
+    let priority: MissionRecommendation['priority'] = 'medium';
+    let enablesCombo: MissionRecommendation['enablesCombo'] = null;
+
+    const isIncompletePotential = potentials.find(p => !p.isComplete && p.missingMissions.includes(offer.name) && p.missingMissions.length <= slotsLeft);
+    if (isIncompletePotential) {
+      const strategy = COMBO_STRATEGIES[isIncompletePotential.combo];
+      score = 95;
+      reason = `Required for ${strategy.label} combo. ${strategy.description.split('.')[0]}.`;
+      priority = 'critical';
+      enablesCombo = isIncompletePotential.combo;
+    } else if (hasActiveCombo && activeStrategy.recommendedMissions.includes(offer.name)) {
+      score = 80;
+      reason = `Highly recommended for ${activeStrategy.label} strategy.`;
+      priority = 'high';
+      enablesCombo = activeStrategy.name;
+    } else if (hasActiveCombo && activeStrategy.sideMissions.includes(offer.name)) {
+      score = 65;
+      reason = `Good synergy with ${activeStrategy.label}.`;
+      priority = 'medium';
+      enablesCombo = activeStrategy.name;
+    } else {
+      switch (def.type) {
+        case 'pull_farming':
+          score = 70;
+          reason = `${def.label} generates pulls directly.`;
+          break;
+        case 'chest_farming':
+          score = 65;
+          reason = `${def.label} generates flying chests for loot.`;
+          break;
+        case 'survival':
+          score = totalCurses > 10 ? 75 : 55;
+          reason = totalCurses > 10 ? `High curses (${totalCurses}) — ${def.label} helps you survive.` : `${def.label} provides survivability.`;
+          break;
+        case 'run_extension':
+          score = 60;
+          reason = `${def.label} extends your run.`;
+          break;
+        case 'reroll':
+          score = 55;
+          reason = `${def.label} provides extra rerolls.`;
+          break;
+        case 'sacrifice':
+          score = 60;
+          reason = `${def.label} provides end reward sacrifices.`;
+          break;
+        case 'qol':
+          score = 50;
+          reason = `${def.label} provides quality of life.`;
+          break;
+        case 'beacon_manipulation':
+          score = 55;
+          reason = `${def.label} improves beacon offerings.`;
+          break;
+      }
+    }
+
+    const universalBoosts: MissionName[] = ['redemption', 'high_roller', 'radiant_hunter', 'inner_peace'];
+    if (universalBoosts.includes(offer.name) && !isIncompletePotential) {
+      score = Math.max(score, 60);
+      reason += ' Strong universal pick.';
+    }
+
+    if (offer.name === 'opal_offering' && !hasActiveCombo) {
+      score = 90;
+      reason = 'Core of the Opal Offering combo — build boons with Blue, convert to pulls with Purple.';
+      priority = 'critical';
+      enablesCombo = 'opal_offering';
+    }
+
+    if (offer.name === 'interest_scheme' && !detectedCombos.includes('jesters_scheme') && activeNames.has('jesters_trick')) {
+      score = 90;
+      reason = "Completes the Jester's Scheme combo with Jester's Trick already selected.";
+      priority = 'critical';
+      enablesCombo = 'jesters_scheme';
+    }
+
+    if (offer.name === 'jesters_trick' && !detectedCombos.includes('jesters_scheme') && activeNames.has('interest_scheme')) {
+      score = 90;
+      reason = "Completes the Jester's Scheme combo with Interest Scheme already selected.";
+      priority = 'critical';
+      enablesCombo = 'jesters_scheme';
+    }
+
+    if (offer.name === 'porphyrophobia' && activeNames.has('inner_peace') && !hasActiveCombo) {
+      score = 85;
+      reason = 'Porphyrophobia + Inner Peace: double purple pulls with half curse effect. 200+ pulls from a dead run.';
+      priority = 'high';
+      enablesCombo = 'comboless';
+    }
+
+    if (offer.name === 'inner_peace' && activeNames.has('porphyrophobia') && !hasActiveCombo) {
+      score = 85;
+      reason = 'Porphyrophobia + Inner Peace: double purple pulls with half curse effect. 200+ pulls from a dead run.';
+      priority = 'high';
+      enablesCombo = 'comboless';
+    }
+
+    if (offer.name === 'chronokinesis' && activeNames.has('radiant_hunter')) {
+      score = Math.max(score, 70);
+      reason += ' Pairs well with Radiant Hunter for passive pull generation.';
+    }
+
+    recMap.set(offer.name, {
+      mission: offer.name,
+      score: Math.min(100, Math.round(score)),
+      reason,
+      priority,
+      enablesCombo,
+    });
+  }
+
+  return Array.from(recMap.values()).sort((a, b) => b.score - a.score);
 }

@@ -8,6 +8,8 @@ import {
   BeaconOffer,
   Recommendation,
   MissionName,
+  MissionOffer,
+  MissionRecommendation,
   ActiveMission,
   TrialName,
   CurseState,
@@ -21,10 +23,12 @@ import {
   calculateEffectivePulls,
   detectPhase,
 } from '@/lib/lootrun/engine';
+import { scoreMissions } from '@/lib/lootrun/recommendations';
 import { RunSummary } from '@/components/lootrun/RunSummary';
 import { BeaconOfferGrid } from '@/components/lootrun/BeaconOfferGrid';
 import { AdvisorPanel } from '@/components/lootrun/AdvisorPanel';
 import { MissionSelector } from '@/components/lootrun/MissionSelector';
+import { MissionOfferGrid } from '@/components/lootrun/MissionOfferGrid';
 import { TrialSelector } from '@/components/lootrun/TrialSelector';
 import { StrategyBar } from '@/components/lootrun/StrategyBar';
 import { Button } from '@/components/ui/button';
@@ -55,6 +59,13 @@ function createDefaultOffers(): BeaconOffer[] {
   }));
 }
 
+function createDefaultMissionOffers(): MissionOffer[] {
+  return (Object.keys(MISSION_DEFINITIONS) as MissionName[]).map((name) => ({
+    name,
+    isSelected: false,
+  }));
+}
+
 const CURSE_KEYS: (keyof CurseState)[] = [
   'damage', 'health', 'attackSpeed', 'walkSpeed',
   'damageResist', 'radiantPower', 'radiantChance',
@@ -68,6 +79,8 @@ export default function RunPage() {
   const [state, setState] = useState<LootrunState>(createInitialState);
   const [offers, setOffers] = useState<BeaconOffer[]>(createDefaultOffers);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [missionOffers, setMissionOffers] = useState<MissionOffer[]>([]);
+  const [missionRecommendations, setMissionRecommendations] = useState<MissionRecommendation[]>([]);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [timerRunning, setTimerRunning] = useState(false);
@@ -212,6 +225,28 @@ export default function RunPage() {
     });
   }, []);
 
+  const toggleMissionOffer = useCallback((name: MissionName) => {
+    setMissionOffers((prev) =>
+      prev.map((o) => o.name === name ? { ...o, isSelected: !o.isSelected } : o),
+    );
+  }, []);
+
+  const clearMissionOffers = useCallback(() => {
+    setMissionOffers((prev) => prev.map((o) => ({ ...o, isSelected: false })));
+    setMissionRecommendations([]);
+  }, []);
+
+  const getMissionRecommendations = useCallback(() => {
+    const recs = scoreMissions(state, missionOffers);
+    setMissionRecommendations(recs);
+  }, [state, missionOffers]);
+
+  const takeMissionFromAdvisor = useCallback((name: MissionName, source: 'free' | 'gray') => {
+    addMission(name, source);
+    setMissionOffers((prev) => prev.map((o) => o.name === name ? { ...o, isSelected: false } : o));
+    setMissionRecommendations([]);
+  }, [addMission]);
+
   const addTrial = useCallback((name: TrialName) => {
     setState((prev) => {
       const trials = [...prev.trials, { name, challengesRemaining: 10, completed: false }];
@@ -245,6 +280,8 @@ export default function RunPage() {
     setState(initial);
     setOffers(createDefaultOffers());
     setRecommendations([]);
+    setMissionOffers(createDefaultMissionOffers());
+    setMissionRecommendations([]);
     setTimerRunning(false);
     setManualOpen(false);
   }, []);
@@ -463,14 +500,26 @@ export default function RunPage() {
             {/* Missions and Trials */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="glow-card rounded-xl p-4">
-                <MissionSelector
-                  missions={state.missions}
-                  onAddMission={addMission}
-                  onRemoveMission={removeMission}
-                  onToggleComplete={toggleMissionComplete}
-                  onUpdateObjective={updateMissionObjective}
-                  state={state}
-                />
+                <span className="text-sm text-[var(--color-wynn-text-muted)]">Active Missions ({state.missions.length}/4)</span>
+                {(state.freeMissionAvailable || state.grayMissionChoices > 0) && (
+                  <div className="mt-2">
+                    <MissionOfferGrid
+                      offers={missionOffers}
+                      state={state}
+                      onToggleSelect={toggleMissionOffer}
+                      onClearAll={clearMissionOffers}
+                      onGetRecommendations={getMissionRecommendations}
+                    />
+                  </div>
+                )}
+                <div className="mt-3">
+                  <MissionSelector
+                    missions={state.missions}
+                    onRemoveMission={removeMission}
+                    onToggleComplete={toggleMissionComplete}
+                    onUpdateObjective={updateMissionObjective}
+                  />
+                </div>
               </div>
               <div className="glow-card rounded-xl p-4">
                 <TrialSelector
@@ -610,7 +659,9 @@ export default function RunPage() {
           <aside className="hidden lg:block w-[320px] shrink-0">
             <AdvisorPanel
               recommendations={recommendations}
+              missionRecommendations={missionRecommendations}
               onTakeBeacon={takeBeacon}
+              onTakeMission={takeMissionFromAdvisor}
               state={state}
             />
           </aside>
@@ -641,7 +692,9 @@ export default function RunPage() {
               <div className="px-4 pb-4 overflow-y-auto h-[calc(100%-4rem)]">
                 <AdvisorPanel
                   recommendations={recommendations}
+                  missionRecommendations={missionRecommendations}
                   onTakeBeacon={takeBeacon}
+                  onTakeMission={takeMissionFromAdvisor}
                   state={state}
                 />
               </div>
