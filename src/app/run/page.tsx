@@ -71,6 +71,8 @@ const CURSE_KEYS: (keyof CurseState)[] = [
   'damageResist', 'radiantPower', 'radiantChance',
 ];
 
+type TabId = 'beacons' | 'missions' | 'trials';
+
 export default function RunPage() {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<string | null>(null);
@@ -81,6 +83,7 @@ export default function RunPage() {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [missionOffers, setMissionOffers] = useState<MissionOffer[]>(createDefaultMissionOffers);
   const [missionRecommendations, setMissionRecommendations] = useState<MissionRecommendation[]>([]);
+  const [activeTab, setActiveTab] = useState<TabId>('beacons');
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [timerRunning, setTimerRunning] = useState(false);
@@ -307,6 +310,14 @@ export default function RunPage() {
     [],
   );
 
+  const pulls = calculateEffectivePulls(state);
+
+  const tabs: { id: TabId; label: string; emoji: string; badge?: number }[] = [
+    { id: 'beacons', label: 'Beacons', emoji: '🔮' },
+    { id: 'missions', label: 'Missions', emoji: '📋', badge: state.freeMissionAvailable || state.grayMissionChoices > 0 ? 1 : undefined },
+    { id: 'trials', label: 'Trials', emoji: '⚔️' },
+  ];
+
   if (!mounted) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -320,27 +331,23 @@ export default function RunPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Sticky Header */}
+      {/* Header */}
       <header
         className="sticky top-0 z-50 border-b border-[rgba(120,68,190,0.35)]"
         style={{
           backdropFilter: 'blur(10px) saturate(130%)',
-          background:
-            'linear-gradient(180deg, rgba(22,10,35,0.85), rgba(10,5,18,0.9))',
+          background: 'linear-gradient(180deg, rgba(22,10,35,0.85), rgba(10,5,18,0.9))',
         }}
       >
         <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <span className="text-2xl">⚔️</span>
-            <h1
-              className="text-lg font-bold text-white font-heading"
-            >
-              WynnLootrun Advisor
+            <h1 className="text-lg font-bold text-white font-heading">
+              WynnLootrun
             </h1>
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Timer display in header */}
             <div className="flex items-center gap-1.5 mr-2">
               <span
                 className={`font-mono font-bold text-lg ${
@@ -355,7 +362,6 @@ export default function RunPage() {
               </span>
             </div>
 
-            {/* Timer controls */}
             <div className="flex items-center gap-1">
               <Button
                 size="xs"
@@ -395,10 +401,7 @@ export default function RunPage() {
               </Button>
             </div>
 
-            <Separator
-              orientation="vertical"
-              className="h-6 bg-[var(--color-wynn-border-glow)]"
-            />
+            <Separator orientation="vertical" className="h-6 bg-[var(--color-wynn-border-glow)]" />
 
             <span className="text-xs text-[var(--color-wynn-text-muted)] hidden sm:inline">
               {currentUser}
@@ -435,34 +438,30 @@ export default function RunPage() {
             </div>
           </aside>
 
-          {/* CENTER - Beacon Grid + Missions/Trials */}
+          {/* CENTER */}
           <div className="flex-1 min-w-0 space-y-4">
-            {/* Mobile: compact summary bar */}
+            {/* Mobile: compact summary */}
             <div className="lg:hidden glow-card rounded-xl p-3">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-[var(--color-wynn-text-muted)]">Challenge</span>
-                  <span className="font-bold text-white">{state.challengeNumber}/{state.totalChallenges}</span>
+                  <span className="text-sm text-[var(--color-wynn-text-muted)]">Ch</span>
+                  <span className="font-bold text-white text-sm">{state.challengeNumber}/{state.totalChallenges}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-[var(--color-wynn-text-muted)]">Pulls</span>
-                  <span className="font-bold text-[var(--color-wynn-gold)]">{calculateEffectivePulls(state).effective}</span>
+                  <span className="font-bold text-[var(--color-wynn-gold)] text-sm">{pulls.effective}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-[var(--color-wynn-text-muted)]">Phase</span>
-                  <Badge
-                    variant="outline"
-                    className="text-xs border-[var(--color-wynn-gold)]/40 text-[var(--color-wynn-gold)] bg-[var(--color-wynn-gold)]/10"
-                  >
+                  <Badge variant="outline" className="text-xs border-[var(--color-wynn-gold)]/40 text-[var(--color-wynn-gold)] bg-[var(--color-wynn-gold)]/10">
                     {state.phase}
                   </Badge>
                   {state.aquaStackPending && (
                     <Badge className="text-[9px] px-1.5 py-0 bg-[var(--color-wynn-cyan)]/20 text-[var(--color-wynn-cyan)] border-[var(--color-wynn-cyan)]/40 animate-pulse">
-                      💧 AQUA
+                      💧AQUA
                     </Badge>
                   )}
                 </div>
-                {/* Mobile: left sidebar in sheet */}
                 <Sheet>
                   <SheetTrigger
                     render={<Button size="xs" variant="outline" className="border-[var(--color-wynn-border-glow)]">📊</Button>}
@@ -470,9 +469,7 @@ export default function RunPage() {
                   <SheetContent side="left" className="w-[280px] p-0 bg-[var(--color-wynn-bg-card)] border-[var(--color-wynn-border-glow)]">
                     <SheetHeader>
                       <SheetTitle className="text-white">Run Summary</SheetTitle>
-                      <SheetDescription className="text-[var(--color-wynn-text-muted)]">
-                        Full run overview
-                      </SheetDescription>
+                      <SheetDescription className="text-[var(--color-wynn-text-muted)]">Full run overview</SheetDescription>
                     </SheetHeader>
                     <div className="px-4 pb-4 overflow-y-auto h-[calc(100%-4rem)]">
                       <RunSummary state={state} onToggleLowTime={toggleLowTime} />
@@ -482,27 +479,57 @@ export default function RunPage() {
               </div>
             </div>
 
-            {/* Beacon Offer Grid */}
-            <BeaconOfferGrid
-              offers={offers}
-              state={state}
-              onToggleSelect={toggleSelect}
-              onToggleVibrant={toggleVibrant}
-              onClearAll={clearAll}
-              onGetRecommendations={getRecommendations}
-            />
+            {/* Tabbed Section: Beacons / Missions / Trials */}
+            <div className="glow-card rounded-xl overflow-hidden">
+              <div className="flex border-b border-[var(--color-wynn-border-glow)]">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-semibold transition-all ${
+                      activeTab === tab.id
+                        ? 'text-white bg-gradient-to-b from-[rgba(168,85,247,0.15)] to-transparent border-b-2 border-[var(--color-wynn-pink)]'
+                        : 'text-[var(--color-wynn-text-muted)] hover:text-white hover:bg-[rgba(168,85,247,0.05)]'
+                    }`}
+                  >
+                    <span>{tab.emoji}</span>
+                    <span>{tab.label}</span>
+                    {tab.badge && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-wynn-pink)]" />
+                    )}
+                  </button>
+                ))}
+              </div>
 
-            {/* Strategy Tips */}
-            <div className="lg:hidden">
-              <StrategyBar state={state} />
-            </div>
+              <div className="p-4">
+                {activeTab === 'beacons' && (
+                  <BeaconOfferGrid
+                    offers={offers}
+                    state={state}
+                    onToggleSelect={toggleSelect}
+                    onToggleVibrant={toggleVibrant}
+                    onClearAll={clearAll}
+                    onGetRecommendations={getRecommendations}
+                  />
+                )}
 
-            {/* Missions and Trials */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="glow-card rounded-xl p-4">
-                <span className="text-sm text-[var(--color-wynn-text-muted)]">Active Missions ({state.missions.length}/4)</span>
-                {(state.freeMissionAvailable || state.grayMissionChoices > 0) && (
-                  <div className="mt-2">
+                {activeTab === 'missions' && (
+                  <div className="space-y-4">
+                    {/* Active missions */}
+                    <div>
+                      <span className="text-sm text-[var(--color-wynn-text-muted)] mb-2 block">
+                        Active Missions ({state.missions.length}/4)
+                      </span>
+                      <MissionSelector
+                        missions={state.missions}
+                        onRemoveMission={removeMission}
+                        onToggleComplete={toggleMissionComplete}
+                        onUpdateObjective={updateMissionObjective}
+                      />
+                    </div>
+
+                    {/* Mission offer + recommendations */}
                     <MissionOfferGrid
                       offers={missionOffers}
                       state={state}
@@ -512,24 +539,22 @@ export default function RunPage() {
                     />
                   </div>
                 )}
-                <div className="mt-3">
-                  <MissionSelector
-                    missions={state.missions}
-                    onRemoveMission={removeMission}
-                    onToggleComplete={toggleMissionComplete}
-                    onUpdateObjective={updateMissionObjective}
+
+                {activeTab === 'trials' && (
+                  <TrialSelector
+                    trials={state.trials}
+                    onAddTrial={addTrial}
+                    onRemoveTrial={removeTrial}
+                    onToggleComplete={toggleTrialComplete}
+                    state={state}
                   />
-                </div>
+                )}
               </div>
-              <div className="glow-card rounded-xl p-4">
-                <TrialSelector
-                  trials={state.trials}
-                  onAddTrial={addTrial}
-                  onRemoveTrial={removeTrial}
-                  onToggleComplete={toggleTrialComplete}
-                  state={state}
-                />
-              </div>
+            </div>
+
+            {/* Strategy Tips (mobile) */}
+            <div className="lg:hidden">
+              <StrategyBar state={state} />
             </div>
 
             {/* Manual Controls */}
@@ -540,77 +565,26 @@ export default function RunPage() {
                 className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-white hover:bg-[rgba(168,85,247,0.08)] transition-colors"
               >
                 <span>⚙️ Manual Controls</span>
-                <span
-                  className={`transition-transform ${manualOpen ? 'rotate-180' : ''}`}
-                >
-                  ▼
-                </span>
+                <span className={`transition-transform ${manualOpen ? 'rotate-180' : ''}`}>▼</span>
               </button>
               {manualOpen && (
                 <div className="p-4 space-y-4 border-t border-[var(--color-wynn-border-glow)]">
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                    <ManualField
-                      label="Challenge #"
-                      type="number"
-                      value={state.challengeNumber}
-                      onChange={(v) => updateManual('challengeNumber', v)}
-                    />
-                    <ManualField
-                      label="Total Challenges"
-                      type="number"
-                      value={state.totalChallenges}
-                      onChange={(v) => updateManual('totalChallenges', v)}
-                    />
-                    <ManualField
-                      label="Timer (seconds)"
-                      type="number"
-                      value={state.timerSeconds}
-                      onChange={(v) => updateManual('timerSeconds', v)}
-                    />
-                    <ManualField
-                      label="Raw Pulls"
-                      type="number"
-                      value={state.rawPulls}
-                      onChange={(v) => updateManual('rawPulls', v)}
-                    />
-                    <ManualField
-                      label="Sacrifices"
-                      type="number"
-                      value={state.sacrifices}
-                      onChange={(v) => updateManual('sacrifices', v)}
-                    />
-                    <ManualField
-                      label="Rerolls"
-                      type="number"
-                      value={state.rerolls}
-                      onChange={(v) => updateManual('rerolls', v)}
-                    />
-                    <ManualField
-                      label="Beacon Choices"
-                      type="number"
-                      value={state.beaconChoices}
-                      onChange={(v) => updateManual('beaconChoices', v)}
-                    />
-                    <ManualField
-                      label="Gray Skipped"
-                      type="number"
-                      value={state.grayBeaconsSkipped}
-                      onChange={(v) => updateManual('grayBeaconsSkipped', v)}
-                    />
-                    <ManualField
-                      label="Crimson Skipped"
-                      type="number"
-                      value={state.crimsonBeaconsSkipped}
-                      onChange={(v) => updateManual('crimsonBeaconsSkipped', v)}
-                    />
+                    <ManualField label="Challenge #" type="number" value={state.challengeNumber} onChange={(v) => updateManual('challengeNumber', v)} />
+                    <ManualField label="Total Challenges" type="number" value={state.totalChallenges} onChange={(v) => updateManual('totalChallenges', v)} />
+                    <ManualField label="Timer (seconds)" type="number" value={state.timerSeconds} onChange={(v) => updateManual('timerSeconds', v)} />
+                    <ManualField label="Raw Pulls" type="number" value={state.rawPulls} onChange={(v) => updateManual('rawPulls', v)} />
+                    <ManualField label="Sacrifices" type="number" value={state.sacrifices} onChange={(v) => updateManual('sacrifices', v)} />
+                    <ManualField label="Rerolls" type="number" value={state.rerolls} onChange={(v) => updateManual('rerolls', v)} />
+                    <ManualField label="Beacon Choices" type="number" value={state.beaconChoices} onChange={(v) => updateManual('beaconChoices', v)} />
+                    <ManualField label="Gray Skipped" type="number" value={state.grayBeaconsSkipped} onChange={(v) => updateManual('grayBeaconsSkipped', v)} />
+                    <ManualField label="Crimson Skipped" type="number" value={state.crimsonBeaconsSkipped} onChange={(v) => updateManual('crimsonBeaconsSkipped', v)} />
                   </div>
 
                   <Separator className="bg-[var(--color-wynn-border-glow)]" />
 
                   <div>
-                    <h4 className="text-xs font-semibold text-[var(--color-wynn-text-muted)] mb-2 uppercase tracking-wider">
-                      Curses
-                    </h4>
+                    <h4 className="text-xs font-semibold text-[var(--color-wynn-text-muted)] mb-2 uppercase tracking-wider">Curses</h4>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                       {CURSE_KEYS.map((key) => (
                         <ManualField
@@ -675,7 +649,7 @@ export default function RunPage() {
                 <Button
                   className="w-full rounded-none h-12 bg-gradient-to-br from-[var(--color-wynn-pink)] to-[var(--color-wynn-purple-dark)] border-t border-[rgba(232,121,249,0.75)] text-white font-semibold"
                 >
-                  🧠 Advisor {recommendations.length > 0 && `(${recommendations.length})`}
+                  🧠 Advisor {(recommendations.length + missionRecommendations.length) > 0 && `(${recommendations.length + missionRecommendations.length})`}
                 </Button>
               }
             />
@@ -686,7 +660,7 @@ export default function RunPage() {
               <SheetHeader className="px-4 pt-4 pb-2">
                 <SheetTitle className="text-white">Advisor</SheetTitle>
                 <SheetDescription className="text-[var(--color-wynn-text-muted)]">
-                  Beacon recommendations
+                  Beacon &amp; mission recommendations
                 </SheetDescription>
               </SheetHeader>
               <div className="px-4 pb-4 overflow-y-auto h-[calc(100%-4rem)]">
