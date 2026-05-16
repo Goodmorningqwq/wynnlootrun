@@ -151,13 +151,43 @@ export function RunSummary({ state, onToggleLowTime }: RunSummaryProps) {
           <div className="space-y-1">
             {state.missions.map((mission, i) => {
               const def = MISSION_DEFINITIONS[mission.name];
+              const obj = mission.objective;
               return (
-                <div key={i} className="text-xs text-[var(--color-wynn-gold)] bg-[var(--color-wynn-gold)]/10 border border-[var(--color-wynn-gold)]/20 rounded px-2 py-1">
-                  {def?.label || mission.name}
+                <div key={i} className={`text-xs rounded px-2 py-1 border ${
+                  mission.completed
+                    ? 'text-[var(--color-wynn-green)] bg-[var(--color-wynn-green)]/10 border-[var(--color-wynn-green)]/20'
+                    : 'text-[var(--color-wynn-gold)] bg-[var(--color-wynn-gold)]/10 border-[var(--color-wynn-gold)]/20'
+                }`}>
+                  <div className="flex items-center gap-1">
+                    <span>{mission.completed ? '✓' : '○'}</span>
+                    <span>{def?.label || mission.name}</span>
+                    {mission.source === 'free' && <span className="text-[8px] opacity-60">FREE</span>}
+                    {mission.source === 'gray' && <span className="text-[8px] opacity-60">GRAY</span>}
+                  </div>
+                  {obj.target > 0 && !mission.completed && (
+                    <div className="text-[9px] opacity-70 mt-0.5">
+                      {obj.label}: {obj.current}/{obj.target}
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
+        </div>
+      )}
+
+      {(state.freeMissionAvailable || state.grayMissionChoices > 0) && (
+        <div className="space-y-1">
+          {state.freeMissionAvailable && state.missions.length === 0 && (
+            <div className="text-[10px] px-2 py-1 rounded border border-[var(--color-wynn-gold)]/30 bg-[var(--color-wynn-gold)]/10 text-[var(--color-wynn-gold)]">
+              ★ Free mission choice available
+            </div>
+          )}
+          {state.grayMissionChoices > 0 && (
+            <div className="text-[10px] px-2 py-1 rounded border border-[var(--color-wynn-cyan)]/30 bg-[var(--color-wynn-cyan)]/10 text-[var(--color-wynn-cyan)]">
+              💧 {state.grayMissionChoices} mission choice{state.grayMissionChoices !== 1 ? 's' : ''} from gray beacon
+            </div>
+          )}
         </div>
       )}
 

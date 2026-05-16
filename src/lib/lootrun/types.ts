@@ -40,9 +40,22 @@ export type TrialName =
 
 export type TrialTier = 'S' | 'A' | 'B' | 'C';
 
+export type MissionObjectiveType =
+  | 'none' | 'open_chests' | 'gain_pulls' | 'complete_challenges'
+  | 'obtain_boons' | 'gain_curses' | 'use_rerolls' | 'add_time';
+
+export interface MissionObjective {
+  type: MissionObjectiveType;
+  target: number;
+  current: number;
+  label: string;
+}
+
 export interface ActiveMission {
   name: MissionName;
-  progress?: string;
+  objective: MissionObjective;
+  completed: boolean;
+  source: 'free' | 'gray';
 }
 
 export interface ActiveTrial {
@@ -159,6 +172,8 @@ export interface LootrunState {
   crimsonBeaconsSkipped: number;
 
   missions: ActiveMission[];
+  freeMissionAvailable: boolean;
+  grayMissionChoices: number;
   trials: ActiveTrial[];
 
   boons: Boon[];

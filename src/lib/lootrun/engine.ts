@@ -429,6 +429,8 @@ export function applyBeaconEffect(
       break;
     }
     case 'gray': {
+      const choices = isAquaStacked ? 5 : isVibrant ? 4 : 3;
+      newState.grayMissionChoices = choices;
       newState.activeEffects.push({ color: 'gray', challenges: 1, isVibrant, isAquaStacked });
       break;
     }
@@ -451,6 +453,10 @@ export function applyBeaconEffect(
   }
 
   newState.challengeNumber += 1;
+
+  if (newState.challengeNumber >= 5 && newState.missions.length === 0 && !newState.freeMissionAvailable) {
+    newState.freeMissionAvailable = true;
+  }
 
   const isOnRedBeacon = newState.activeEffects.some(e => e.color === 'red' && e.challenges > 0);
   if (!isOnRedBeacon) {
@@ -487,6 +493,8 @@ export function createInitialState(): LootrunState {
     grayBeaconsSkipped: 0,
     crimsonBeaconsSkipped: 0,
     missions: [],
+    freeMissionAvailable: false,
+    grayMissionChoices: 0,
     trials: [],
     boons: [],
     curses: { damage: 0, health: 0, attackSpeed: 0, walkSpeed: 0, damageResist: 0, radiantPower: 0, radiantChance: 0 },

@@ -65,7 +65,7 @@ export function getBeaconConstraints(state: LootrunState): Record<BeaconColor, {
     constraints.crimson = { available: false, reason: 'Crimson beacon can only be taken 2 times (max count: 2)' };
   }
 
-  const hasIncompleteMission = state.missions.length < 4 && state.missions.length > 0;
+  const hasIncompleteMission = state.missions.some(m => !m.completed);
   if (state.challengeNumber < 5) {
     constraints.gray = { available: false, reason: 'Gray beacons cannot appear before completing challenge 4' };
   } else if (hasIncompleteMission) {

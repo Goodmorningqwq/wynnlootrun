@@ -8,10 +8,12 @@ import {
   BeaconOffer,
   Recommendation,
   MissionName,
+  ActiveMission,
   TrialName,
   CurseState,
 } from '@/lib/lootrun/types';
 import { BEACON_COLORS } from '@/lib/lootrun/beacons';
+import { MISSION_DEFINITIONS, createMissionObjective } from '@/lib/lootrun/missions';
 import {
   createInitialState,
   scoreBeacons,
@@ -163,17 +165,49 @@ export default function RunPage() {
     [state, offers],
   );
 
-  const addMission = useCallback((name: MissionName) => {
-    setState((prev) => ({
-      ...prev,
-      missions: [...prev.missions, { name }],
-      phase: detectPhase({ ...prev, missions: [...prev.missions, { name }] }),
-    }));
+  const addMission = useCallback((name: MissionName, source: 'free' | 'gray') => {
+    setState((prev) => {
+      const def = MISSION_DEFINITIONS[name];
+      const mission: ActiveMission = {
+        name,
+        objective: def ? createMissionObjective(def) : { type: 'none' as const, target: 0, current: 0, label: 'Unknown' },
+        completed: def?.objectiveType === 'none',
+        source,
+      };
+      const newMissions = [...prev.missions, mission];
+      return {
+        ...prev,
+        missions: newMissions,
+        freeMissionAvailable: source === 'free' ? false : prev.freeMissionAvailable,
+        grayMissionChoices: source === 'gray' ? Math.max(0, prev.grayMissionChoices - 1) : prev.grayMissionChoices,
+        phase: detectPhase({ ...prev, missions: newMissions }),
+      };
+    });
   }, []);
 
   const removeMission = useCallback((index: number) => {
     setState((prev) => {
       const missions = prev.missions.filter((_, i) => i !== index);
+      return { ...prev, missions, phase: detectPhase({ ...prev, missions }) };
+    });
+  }, []);
+
+  const toggleMissionComplete = useCallback((index: number) => {
+    setState((prev) => {
+      const missions = prev.missions.map((m, i) =>
+        i === index ? { ...m, completed: !m.completed } : m,
+      );
+      return { ...prev, missions, phase: detectPhase({ ...prev, missions }) };
+    });
+  }, []);
+
+  const updateMissionObjective = useCallback((index: number, current: number) => {
+    setState((prev) => {
+      const missions = prev.missions.map((m, i) => {
+        if (i !== index) return m;
+        const newCurrent = Math.max(0, Math.min(m.objective.target, current));
+        return { ...m, objective: { ...m.objective, current: newCurrent }, completed: m.objective.target > 0 && newCurrent >= m.objective.target };
+      });
       return { ...prev, missions, phase: detectPhase({ ...prev, missions }) };
     });
   }, []);
@@ -433,6 +467,8 @@ export default function RunPage() {
                   missions={state.missions}
                   onAddMission={addMission}
                   onRemoveMission={removeMission}
+                  onToggleComplete={toggleMissionComplete}
+                  onUpdateObjective={updateMissionObjective}
                   state={state}
                 />
               </div>

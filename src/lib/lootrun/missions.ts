@@ -1,4 +1,4 @@
-import { MissionName } from './types';
+import { MissionName, MissionObjectiveType } from './types';
 
 export interface MissionDefinition {
   name: MissionName;
@@ -7,6 +7,18 @@ export interface MissionDefinition {
   type: 'pull_farming' | 'chest_farming' | 'survival' | 'qol' | 'beacon_manipulation' | 'run_extension' | 'reroll' | 'sacrifice';
   comboRole: 'required' | 'recommended' | 'side' | 'standalone';
   compatibleCombos: string[];
+  objectiveType: MissionObjectiveType;
+  objectiveTarget: number;
+  objectiveLabel: string;
+}
+
+export function createMissionObjective(def: MissionDefinition) {
+  return {
+    type: def.objectiveType,
+    target: def.objectiveTarget,
+    current: 0,
+    label: def.objectiveLabel,
+  };
 }
 
 export const MISSION_DEFINITIONS: Record<MissionName, MissionDefinition> = {
@@ -17,6 +29,9 @@ export const MISSION_DEFINITIONS: Record<MissionName, MissionDefinition> = {
     type: 'qol',
     comboRole: 'side',
     compatibleCombos: ['opal_offering', 'jesters_scheme'],
+    objectiveType: 'open_chests',
+    objectiveTarget: 5,
+    objectiveLabel: 'Open 5 Flying Chests',
   },
   materialism: {
     name: 'materialism',
@@ -25,6 +40,9 @@ export const MISSION_DEFINITIONS: Record<MissionName, MissionDefinition> = {
     type: 'chest_farming',
     comboRole: 'recommended',
     compatibleCombos: ['jesters_scheme'],
+    objectiveType: 'complete_challenges',
+    objectiveTarget: 8,
+    objectiveLabel: 'Complete 8 challenges',
   },
   hoarder: {
     name: 'hoarder',
@@ -33,6 +51,9 @@ export const MISSION_DEFINITIONS: Record<MissionName, MissionDefinition> = {
     type: 'qol',
     comboRole: 'side',
     compatibleCombos: ['jesters_scheme'],
+    objectiveType: 'open_chests',
+    objectiveTarget: 7,
+    objectiveLabel: 'Open 7 chests',
   },
   jesters_trick: {
     name: 'jesters_trick',
@@ -41,6 +62,9 @@ export const MISSION_DEFINITIONS: Record<MissionName, MissionDefinition> = {
     type: 'qol',
     comboRole: 'required',
     compatibleCombos: ['jesters_scheme'],
+    objectiveType: 'open_chests',
+    objectiveTarget: 30,
+    objectiveLabel: 'Be offered 30 items from chests',
   },
   interest_scheme: {
     name: 'interest_scheme',
@@ -49,6 +73,9 @@ export const MISSION_DEFINITIONS: Record<MissionName, MissionDefinition> = {
     type: 'chest_farming',
     comboRole: 'required',
     compatibleCombos: ['jesters_scheme'],
+    objectiveType: 'gain_pulls',
+    objectiveTarget: 6,
+    objectiveLabel: 'Gain 6 pulls',
   },
   orphions_grace: {
     name: 'orphions_grace',
@@ -57,6 +84,9 @@ export const MISSION_DEFINITIONS: Record<MissionName, MissionDefinition> = {
     type: 'qol',
     comboRole: 'side',
     compatibleCombos: ['jesters_scheme', 'opal_offering'],
+    objectiveType: 'obtain_boons',
+    objectiveTarget: 3,
+    objectiveLabel: 'Obtain 3 boons',
   },
   opal_offering: {
     name: 'opal_offering',
@@ -65,6 +95,9 @@ export const MISSION_DEFINITIONS: Record<MissionName, MissionDefinition> = {
     type: 'pull_farming',
     comboRole: 'required',
     compatibleCombos: ['opal_offering'],
+    objectiveType: 'gain_curses',
+    objectiveTarget: 3,
+    objectiveLabel: 'Obtain 3 curses',
   },
   gourmand: {
     name: 'gourmand',
@@ -73,6 +106,9 @@ export const MISSION_DEFINITIONS: Record<MissionName, MissionDefinition> = {
     type: 'beacon_manipulation',
     comboRole: 'side',
     compatibleCombos: ['gambling_beast'],
+    objectiveType: 'use_rerolls',
+    objectiveTarget: 3,
+    objectiveLabel: 'Use 3 beacon rerolls',
   },
   porphyrophobia: {
     name: 'porphyrophobia',
@@ -81,6 +117,9 @@ export const MISSION_DEFINITIONS: Record<MissionName, MissionDefinition> = {
     type: 'pull_farming',
     comboRole: 'standalone',
     compatibleCombos: ['chronotrigger', 'comboless'],
+    objectiveType: 'none',
+    objectiveTarget: 0,
+    objectiveLabel: 'No objective — passive effect',
   },
   sacrificial_ritual: {
     name: 'sacrificial_ritual',
@@ -89,6 +128,9 @@ export const MISSION_DEFINITIONS: Record<MissionName, MissionDefinition> = {
     type: 'run_extension',
     comboRole: 'recommended',
     compatibleCombos: ['opal_offering', 'jesters_scheme', 'gambling_beast'],
+    objectiveType: 'gain_pulls',
+    objectiveTarget: 5,
+    objectiveLabel: 'Gain 5 pulls',
   },
   equilibrium: {
     name: 'equilibrium',
@@ -97,6 +139,9 @@ export const MISSION_DEFINITIONS: Record<MissionName, MissionDefinition> = {
     type: 'qol',
     comboRole: 'standalone',
     compatibleCombos: ['chronotrigger'],
+    objectiveType: 'gain_curses',
+    objectiveTarget: 3,
+    objectiveLabel: 'Obtain 3 curses',
   },
   inner_peace: {
     name: 'inner_peace',
@@ -105,6 +150,9 @@ export const MISSION_DEFINITIONS: Record<MissionName, MissionDefinition> = {
     type: 'survival',
     comboRole: 'standalone',
     compatibleCombos: ['comboless', 'chronotrigger'],
+    objectiveType: 'gain_curses',
+    objectiveTarget: 4,
+    objectiveLabel: 'Obtain 4 curses',
   },
   radiant_hunter: {
     name: 'radiant_hunter',
@@ -113,6 +161,9 @@ export const MISSION_DEFINITIONS: Record<MissionName, MissionDefinition> = {
     type: 'pull_farming',
     comboRole: 'recommended',
     compatibleCombos: ['opal_offering', 'jesters_scheme', 'chronotrigger', 'comboless'],
+    objectiveType: 'complete_challenges',
+    objectiveTarget: 5,
+    objectiveLabel: 'Complete 5 challenges with Radiant mobs',
   },
   optimism: {
     name: 'optimism',
@@ -121,6 +172,9 @@ export const MISSION_DEFINITIONS: Record<MissionName, MissionDefinition> = {
     type: 'beacon_manipulation',
     comboRole: 'side',
     compatibleCombos: ['gambling_beast'],
+    objectiveType: 'use_rerolls',
+    objectiveTarget: 5,
+    objectiveLabel: 'Use 5 beacon rerolls',
   },
   backup_beat: {
     name: 'backup_beat',
@@ -129,6 +183,9 @@ export const MISSION_DEFINITIONS: Record<MissionName, MissionDefinition> = {
     type: 'reroll',
     comboRole: 'side',
     compatibleCombos: ['gambling_beast'],
+    objectiveType: 'add_time',
+    objectiveTarget: 300,
+    objectiveLabel: 'Add 300s to timer',
   },
   stasis: {
     name: 'stasis',
@@ -137,6 +194,9 @@ export const MISSION_DEFINITIONS: Record<MissionName, MissionDefinition> = {
     type: 'qol',
     comboRole: 'standalone',
     compatibleCombos: [],
+    objectiveType: 'complete_challenges',
+    objectiveTarget: 6,
+    objectiveLabel: 'Complete 6 challenges',
   },
   chronokinesis: {
     name: 'chronokinesis',
@@ -145,6 +205,9 @@ export const MISSION_DEFINITIONS: Record<MissionName, MissionDefinition> = {
     type: 'pull_farming',
     comboRole: 'side',
     compatibleCombos: ['jesters_scheme', 'chronotrigger', 'comboless'],
+    objectiveType: 'open_chests',
+    objectiveTarget: 10,
+    objectiveLabel: 'Open 10 chests',
   },
   requiem: {
     name: 'requiem',
@@ -153,6 +216,9 @@ export const MISSION_DEFINITIONS: Record<MissionName, MissionDefinition> = {
     type: 'survival',
     comboRole: 'standalone',
     compatibleCombos: [],
+    objectiveType: 'complete_challenges',
+    objectiveTarget: 5,
+    objectiveLabel: 'Complete 5 challenges',
   },
   thrill_seeker: {
     name: 'thrill_seeker',
@@ -161,6 +227,9 @@ export const MISSION_DEFINITIONS: Record<MissionName, MissionDefinition> = {
     type: 'qol',
     comboRole: 'standalone',
     compatibleCombos: [],
+    objectiveType: 'none',
+    objectiveTarget: 0,
+    objectiveLabel: 'No objective — passive effect',
   },
   high_roller: {
     name: 'high_roller',
@@ -169,6 +238,9 @@ export const MISSION_DEFINITIONS: Record<MissionName, MissionDefinition> = {
     type: 'pull_farming',
     comboRole: 'side',
     compatibleCombos: ['opal_offering', 'jesters_scheme', 'gambling_beast', 'comboless'],
+    objectiveType: 'none',
+    objectiveTarget: 0,
+    objectiveLabel: 'No objective — instant effect',
   },
   redemption: {
     name: 'redemption',
@@ -177,6 +249,9 @@ export const MISSION_DEFINITIONS: Record<MissionName, MissionDefinition> = {
     type: 'sacrifice',
     comboRole: 'side',
     compatibleCombos: ['opal_offering', 'jesters_scheme', 'gambling_beast', 'comboless'],
+    objectiveType: 'none',
+    objectiveTarget: 0,
+    objectiveLabel: 'No objective — instant effect',
   },
   complete_chaos: {
     name: 'complete_chaos',
@@ -185,5 +260,8 @@ export const MISSION_DEFINITIONS: Record<MissionName, MissionDefinition> = {
     type: 'qol',
     comboRole: 'side',
     compatibleCombos: ['jesters_scheme'],
+    objectiveType: 'complete_challenges',
+    objectiveTarget: 5,
+    objectiveLabel: 'Complete 5 challenges',
   },
 };

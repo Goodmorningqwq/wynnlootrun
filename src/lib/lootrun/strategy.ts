@@ -94,7 +94,7 @@ export function getStrategyAdvice(state: LootrunState): StrategyTip[] {
 
   if (state.phase === 'mission_setup') {
     const grayUsed = state.beaconsUsed.gray ?? 0;
-    const hasIncompleteMission = state.missions.some(m => !m.progress || m.progress === '');
+    const hasIncompleteMission = state.missions.some(m => !m.completed);
     const orangeChallenges = state.activeEffects
       .filter(e => e.color === 'orange' && e.challenges > 0)
       .reduce((sum, e) => sum + e.challenges, 0);
