@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 
 interface AdvisorPanelProps {
   recommendations: Recommendation[];
-  onTakeBeacon: (color: BeaconColor, aquaStack: boolean) => void;
+  onTakeBeacon: (color: BeaconColor) => void;
   state: LootrunState;
 }
 
@@ -81,7 +81,7 @@ export function AdvisorPanel({ recommendations, onTakeBeacon, state }: AdvisorPa
                     </span>
                     <span className="text-xl">{def.emoji}</span>
                     <span className="font-semibold text-white">{def.label}</span>
-                    {rec.shouldAquaStack && (
+                    {rec.willBeAquaStacked && (
                       <Badge className="text-[9px] px-1.5 py-0 bg-[var(--color-wynn-cyan)]/20 text-[var(--color-wynn-cyan)] border-[var(--color-wynn-cyan)]/40">
                         AQUA STACK
                       </Badge>
@@ -117,7 +117,7 @@ export function AdvisorPanel({ recommendations, onTakeBeacon, state }: AdvisorPa
 
                 <Button
                   size="sm"
-                  onClick={() => onTakeBeacon(rec.beaconColor, rec.shouldAquaStack)}
+                  onClick={() => onTakeBeacon(rec.beaconColor)}
                   className="w-full text-xs font-semibold border"
                   style={{
                     background: `linear-gradient(135deg, ${def.colorHex}30, ${def.colorHex}15)`,
@@ -125,7 +125,7 @@ export function AdvisorPanel({ recommendations, onTakeBeacon, state }: AdvisorPa
                     color: def.colorHex,
                   }}
                 >
-                  Take {def.label}{rec.shouldAquaStack ? ' (Aqua Stacked)' : ''}
+                  Take {def.label}{rec.willBeAquaStacked ? ' (Aqua Stacked)' : ''}
                 </Button>
               </div>
             );

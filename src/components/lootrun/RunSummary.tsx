@@ -64,6 +64,13 @@ export function RunSummary({ state, onToggleLowTime }: RunSummaryProps) {
         <div className="text-base font-semibold text-[var(--color-wynn-gold)]">
           {PHASE_LABELS[state.phase] || state.phase}
         </div>
+        {state.aquaStackPending && (
+          <div className="mt-1">
+            <Badge className="text-[10px] px-2 py-0.5 bg-[var(--color-wynn-cyan)]/20 text-[var(--color-wynn-cyan)] border-[var(--color-wynn-cyan)]/40 font-bold animate-pulse">
+              💧 AQUA STACK READY
+            </Badge>
+          </div>
+        )}
       </div>
 
       <Separator className="bg-[var(--color-wynn-border-glow)]" />

@@ -150,11 +150,11 @@ export default function RunPage() {
   }, [state, offers]);
 
   const takeBeacon = useCallback(
-    (color: BeaconColor, aquaStack: boolean) => {
+    (color: BeaconColor) => {
       const offer = offers.find((o) => o.color === color);
       if (!offer) return;
       const isVibrant = offer.isVibrant;
-      const newState = applyBeaconEffect(state, color, isVibrant, aquaStack);
+      const newState = applyBeaconEffect(state, color, isVibrant);
       setState(newState);
       setOffers(createDefaultOffers());
       setRecommendations([]);
@@ -207,7 +207,8 @@ export default function RunPage() {
   }, [router]);
 
   const handleNewRun = useCallback(() => {
-    setState(createInitialState());
+    const initial = createInitialState();
+    setState(initial);
     setOffers(createDefaultOffers());
     setRecommendations([]);
     setTimerRunning(false);
@@ -384,6 +385,11 @@ export default function RunPage() {
                   >
                     {state.phase}
                   </Badge>
+                  {state.aquaStackPending && (
+                    <Badge className="text-[9px] px-1.5 py-0 bg-[var(--color-wynn-cyan)]/20 text-[var(--color-wynn-cyan)] border-[var(--color-wynn-cyan)]/40 animate-pulse">
+                      💧 AQUA
+                    </Badge>
+                  )}
                 </div>
                 {/* Mobile: left sidebar in sheet */}
                 <Sheet>
@@ -545,6 +551,18 @@ export default function RunPage() {
                       }`}
                     >
                       {state.isLowTime ? '⚠️ Low Time ON' : 'Low Time OFF'}
+                    </Button>
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      onClick={() => setState((prev) => ({ ...prev, aquaStackPending: !prev.aquaStackPending }))}
+                      className={`border-[var(--color-wynn-border-glow)] ${
+                        state.aquaStackPending
+                          ? 'bg-[var(--color-wynn-cyan)]/20 text-[var(--color-wynn-cyan)] border-[var(--color-wynn-cyan)]/40'
+                          : 'text-[var(--color-wynn-text-muted)]'
+                      }`}
+                    >
+                      {state.aquaStackPending ? '💧 Aqua Stack ON' : 'Aqua Stack OFF'}
                     </Button>
                   </div>
                 </div>

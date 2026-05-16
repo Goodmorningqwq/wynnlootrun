@@ -154,6 +154,7 @@ export interface LootrunState {
   beaconChoices: number;
 
   beaconsUsed: Partial<Record<BeaconColor, number>>;
+  aquaStackPending: boolean;
   grayBeaconsSkipped: number;
   crimsonBeaconsSkipped: number;
 
@@ -176,7 +177,7 @@ export interface Recommendation {
   beaconColor: BeaconColor;
   score: number;
   reason: string;
-  shouldAquaStack: boolean;
+  willBeAquaStacked: boolean;
   shouldTakeVibrant: boolean;
   priority: number;
 }

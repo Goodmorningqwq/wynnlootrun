@@ -184,33 +184,6 @@ function getPhaseSpecificAdjustments(color: BeaconColor, state: LootrunState, ph
   return adj;
 }
 
-function shouldAquaStackBeacon(color: BeaconColor, state: LootrunState, phase: RunPhase): boolean {
-  const aquaStackTargets: BeaconColor[] = [
-    'rainbow', 'orange', 'gray', 'crimson', 'darkGray', 'white', 'green', 'yellow', 'purple', 'blue',
-  ];
-
-  if (!aquaStackTargets.includes(color)) return false;
-
-  if (phase === 'setup' && (color === 'rainbow' || color === 'orange')) return true;
-  if (phase === 'extension' && (color === 'white' || color === 'red')) return true;
-  if (phase === 'mission_setup' && color === 'gray') return true;
-  if (phase === 'trial_setup' && color === 'crimson') return true;
-
-  const combo = detectCombos(state.missions)[0];
-  if (phase === 'pull_farming') {
-    switch (combo) {
-      case 'opal_offering': return color === 'blue' || color === 'purple';
-      case 'jesters_scheme': return color === 'yellow';
-      case 'chronotrigger': return color === 'green' || color === 'purple';
-      case 'gambling_beast': return color === 'green';
-      case 'dying_light_all_in': return color === 'rainbow';
-      case 'comboless': return color === 'purple' || color === 'darkGray';
-    }
-  }
-
-  return aquaStackTargets.includes(color);
-}
-
 function generateReason(
   color: BeaconColor, score: number, phase: RunPhase, combo: string | null,
   state: LootrunState, isVibrant: boolean,
@@ -277,6 +250,10 @@ function generateReason(
     reasons.push('Opal Offering strategy: build boons → convert to pulls.');
   }
 
+  if (state.aquaStackPending) {
+    reasons.push('Aqua Stack active — this beacon will have enhanced effect.');
+  }
+
   return reasons.join(' ');
 }
 
@@ -317,6 +294,16 @@ export function scoreBeacons(
 
     score += getPhaseSpecificAdjustments(offer.color, state, phase);
 
+    if (state.aquaStackPending && offer.color !== 'aqua') {
+      const aquaStackTargets: BeaconColor[] = [
+        'rainbow', 'orange', 'white', 'red', 'green', 'purple',
+        'darkGray', 'gray', 'crimson', 'yellow', 'blue',
+      ];
+      if (aquaStackTargets.includes(offer.color)) {
+        score += 20;
+      }
+    }
+
     scores[offer.color] = score;
   }
 
@@ -344,7 +331,7 @@ export function scoreBeacons(
         beaconColor,
         score: Math.min(100, Math.round(score)),
         reason: generateReason(beaconColor, score, phase, combo, state, offer.isVibrant),
-        shouldAquaStack: shouldAquaStackBeacon(beaconColor, state, phase),
+        willBeAquaStacked: state.aquaStackPending,
         shouldTakeVibrant: offer.isVibrant,
         priority: index + 1,
       };
@@ -357,13 +344,15 @@ export function applyBeaconEffect(
   state: LootrunState,
   color: BeaconColor,
   isVibrant: boolean,
-  isAquaStacked: boolean,
 ): LootrunState {
+  const isAquaStacked = state.aquaStackPending;
+
   const newState = {
     ...state,
     beaconsUsed: { ...state.beaconsUsed },
     activeEffects: [...state.activeEffects],
     curses: { ...state.curses },
+    aquaStackPending: color === 'aqua',
   };
 
   newState.beaconsUsed[color] = (newState.beaconsUsed[color] ?? 0) + 1;
@@ -494,6 +483,7 @@ export function createInitialState(): LootrunState {
     activeEffects: [],
     beaconChoices: 3,
     beaconsUsed: {},
+    aquaStackPending: false,
     grayBeaconsSkipped: 0,
     crimsonBeaconsSkipped: 0,
     missions: [],
