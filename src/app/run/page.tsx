@@ -79,7 +79,7 @@ export default function RunPage() {
   const [state, setState] = useState<LootrunState>(createInitialState);
   const [offers, setOffers] = useState<BeaconOffer[]>(createDefaultOffers);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
-  const [missionOffers, setMissionOffers] = useState<MissionOffer[]>([]);
+  const [missionOffers, setMissionOffers] = useState<MissionOffer[]>(createDefaultMissionOffers);
   const [missionRecommendations, setMissionRecommendations] = useState<MissionRecommendation[]>([]);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
