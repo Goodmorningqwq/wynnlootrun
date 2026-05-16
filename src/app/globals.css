@@ -1,26 +1,129 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: #07050d;
+  --color-foreground: #ede8ff;
+  --color-card: rgba(20, 10, 34, 0.92);
+  --color-card-foreground: #ede8ff;
+  --color-popover: rgba(24, 12, 39, 0.96);
+  --color-popover-foreground: #ede8ff;
+  --color-primary: #a855f7;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: rgba(168, 85, 247, 0.15);
+  --color-secondary-foreground: #d4bfff;
+  --color-muted: rgba(163, 154, 191, 0.12);
+  --color-muted-foreground: #a39abf;
+  --color-accent: rgba(255, 79, 216, 0.12);
+  --color-accent-foreground: #ff4fd8;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  --color-border: rgba(120, 68, 190, 0.35);
+  --color-input: rgba(120, 68, 190, 0.4);
+  --color-ring: #a855f7;
+  --color-sidebar-background: rgba(14, 7, 24, 0.95);
+  --color-sidebar-foreground: #ede8ff;
+  --color-sidebar-primary: #ff4fd8;
+  --color-sidebar-primary-foreground: #ffffff;
+  --color-sidebar-accent: rgba(168, 85, 247, 0.2);
+  --color-sidebar-accent-foreground: #d4bfff;
+  --color-sidebar-border: rgba(120, 68, 190, 0.3);
+  --color-sidebar-ring: #a855f7;
+  --radius: 0.625rem;
+
+  --color-wynn-gold: #f5d442;
+  --color-wynn-gold-dim: #c4a82e;
+  --color-wynn-purple: #a855f7;
+  --color-wynn-purple-dark: #7c3aed;
+  --color-wynn-pink: #ff4fd8;
+  --color-wynn-bg-deep: #07050d;
+  --color-wynn-bg-card: rgba(20, 10, 34, 0.92);
+  --color-wynn-border-glow: rgba(168, 85, 247, 0.5);
+  --color-wynn-text: #ede8ff;
+  --color-wynn-text-muted: #a39abf;
+  --color-wynn-text-gold: #f5d442;
+  --color-wynn-green: #2ecc71;
+  --color-wynn-red: #ee5a24;
+  --color-wynn-blue: #54a0ff;
+  --color-wynn-cyan: #00d2d3;
+
+
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at 14% 18%, rgba(255, 79, 216, 0.08), transparent 32%),
+      radial-gradient(circle at 82% 8%, rgba(168, 85, 247, 0.12), transparent 35%),
+      radial-gradient(circle at 72% 75%, rgba(124, 58, 237, 0.07), transparent 38%),
+      var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-body), 'Chakra Petch', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-heading), 'Russo One', sans-serif;
+  }
+
+  .font-heading {
+    font-family: var(--font-heading), 'Russo One', sans-serif;
+  }
+
+  .font-body {
+    font-family: var(--font-body), 'Chakra Petch', sans-serif;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.glow-card {
+  position: relative;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  background: linear-gradient(180deg, rgba(24, 12, 39, 0.96), rgba(14, 8, 26, 0.94));
+  box-shadow: inset 0 0 0 1px rgba(236, 72, 153, 0.06), 0 4px 16px rgba(0, 0, 0, 0.4);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.glow-card:hover {
+  border-color: rgba(168, 85, 247, 0.6);
+  box-shadow: inset 0 0 0 1px rgba(236, 72, 153, 0.12), 0 0 20px rgba(168, 85, 247, 0.15), 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.beacon-glow {
+  transition: all 0.25s ease;
+}
+
+.beacon-glow.selected {
+  animation: beacon-pulse 2s ease-in-out infinite;
+}
+
+@keyframes beacon-pulse {
+  0%, 100% { box-shadow: 0 0 8px var(--glow-color, rgba(168, 85, 247, 0.4)); }
+  50% { box-shadow: 0 0 20px var(--glow-color, rgba(168, 85, 247, 0.7)), 0 0 40px var(--glow-color, rgba(168, 85, 247, 0.2)); }
+}
+
+.neon-line {
+  height: 3px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, var(--color-wynn-pink), var(--color-wynn-purple), var(--color-wynn-purple-dark));
+  box-shadow: 0 0 10px rgba(255, 79, 216, 0.3), 0 0 20px rgba(168, 85, 247, 0.15);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(7, 5, 13, 0.5);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(168, 85, 247, 0.3);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(168, 85, 247, 0.5);
 }
