@@ -347,10 +347,14 @@ export function applyBeaconEffect(
 ): LootrunState {
   const isAquaStacked = state.aquaStackPending;
 
+  const existingEffects = state.activeEffects
+    .map(e => ({ ...e, challenges: e.challenges - 1 }))
+    .filter(e => e.challenges > 0);
+
   const newState = {
     ...state,
     beaconsUsed: { ...state.beaconsUsed },
-    activeEffects: [...state.activeEffects],
+    activeEffects: existingEffects,
     curses: { ...state.curses },
     aquaStackPending: color === 'aqua',
   };
@@ -434,7 +438,7 @@ export function applyBeaconEffect(
     }
   }
 
-  newState.rawPulls += pullsAdded;
+  newState.rawPulls += pullsAdded + 1;
 
   if (cursesAdded > 0) {
     newState.curses.damage += Math.ceil(cursesAdded / 3);
@@ -452,10 +456,6 @@ export function applyBeaconEffect(
   if (!isOnRedBeacon) {
     newState.timerSeconds = Math.min(900, newState.timerSeconds + 150);
   }
-
-  newState.activeEffects = newState.activeEffects
-    .map(e => ({ ...e, challenges: e.challenges - 1 }))
-    .filter(e => e.challenges > 0);
 
   newState.phase = detectPhase(newState);
 
