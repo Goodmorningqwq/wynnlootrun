@@ -71,8 +71,6 @@ const CURSE_KEYS: (keyof CurseState)[] = [
   'damageResist', 'radiantPower', 'radiantChance',
 ];
 
-type TabId = 'beacons' | 'missions' | 'trials';
-
 export default function RunPage() {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<string | null>(null);
@@ -83,7 +81,6 @@ export default function RunPage() {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [missionOffers, setMissionOffers] = useState<MissionOffer[]>(createDefaultMissionOffers);
   const [missionRecommendations, setMissionRecommendations] = useState<MissionRecommendation[]>([]);
-  const [activeTab, setActiveTab] = useState<TabId>('beacons');
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [timerRunning, setTimerRunning] = useState(false);
@@ -312,12 +309,6 @@ export default function RunPage() {
 
   const pulls = calculateEffectivePulls(state);
 
-  const tabs: { id: TabId; label: string; emoji: string; badge?: number }[] = [
-    { id: 'beacons', label: 'Beacons', emoji: '🔮' },
-    { id: 'missions', label: 'Missions', emoji: '📋', badge: state.freeMissionAvailable || state.grayMissionChoices > 0 ? 1 : undefined },
-    { id: 'trials', label: 'Trials', emoji: '⚔️' },
-  ];
-
   if (!mounted) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -481,29 +472,8 @@ export default function RunPage() {
 
             {/* Tabbed Section: Beacons / Missions / Trials */}
             <div className="glow-card rounded-xl overflow-hidden">
-              <div className="flex border-b border-[var(--color-wynn-border-glow)]">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-semibold transition-all ${
-                      activeTab === tab.id
-                        ? 'text-white bg-gradient-to-b from-[rgba(168,85,247,0.15)] to-transparent border-b-2 border-[var(--color-wynn-pink)]'
-                        : 'text-[var(--color-wynn-text-muted)] hover:text-white hover:bg-[rgba(168,85,247,0.05)]'
-                    }`}
-                  >
-                    <span>{tab.emoji}</span>
-                    <span>{tab.label}</span>
-                    {tab.badge && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-wynn-pink)]" />
-                    )}
-                  </button>
-                ))}
-              </div>
-
-              <div className="p-4">
-                {activeTab === 'beacons' && (
+              <div className="p-4 space-y-6">
+                <div>
                   <BeaconOfferGrid
                     offers={offers}
                     state={state}
@@ -512,11 +482,18 @@ export default function RunPage() {
                     onClearAll={clearAll}
                     onGetRecommendations={getRecommendations}
                   />
-                )}
+                </div>
 
-                {activeTab === 'missions' && (
+                <Separator className="bg-[var(--color-wynn-border-glow)]" />
+
+                <div>
+                  <h2 className="text-lg font-bold text-white mb-3" style={{ fontFamily: 'var(--font-heading)' }}>
+                    📋 Missions
+                    {(state.freeMissionAvailable || state.grayMissionChoices > 0) && (
+                      <span className="ml-2 w-1.5 h-1.5 rounded-full bg-[var(--color-wynn-pink)] inline-block align-middle" />
+                    )}
+                  </h2>
                   <div className="space-y-4">
-                    {/* Active missions */}
                     <div>
                       <span className="text-sm text-[var(--color-wynn-text-muted)] mb-2 block">
                         Active Missions ({state.missions.length}/4)
@@ -529,7 +506,6 @@ export default function RunPage() {
                       />
                     </div>
 
-                    {/* Mission offer + recommendations */}
                     <MissionOfferGrid
                       offers={missionOffers}
                       state={state}
@@ -538,9 +514,14 @@ export default function RunPage() {
                       onGetRecommendations={getMissionRecommendations}
                     />
                   </div>
-                )}
+                </div>
 
-                {activeTab === 'trials' && (
+                <Separator className="bg-[var(--color-wynn-border-glow)]" />
+
+                <div>
+                  <h2 className="text-lg font-bold text-white mb-3" style={{ fontFamily: 'var(--font-heading)' }}>
+                    ⚔️ Trials
+                  </h2>
                   <TrialSelector
                     trials={state.trials}
                     onAddTrial={addTrial}
@@ -548,7 +529,7 @@ export default function RunPage() {
                     onToggleComplete={toggleTrialComplete}
                     state={state}
                   />
-                )}
+                </div>
               </div>
             </div>
 
